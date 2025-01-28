@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "medmcq-llm-guide"
+version = "0.1.0"
+description = ""
+authors = ["bhwk <bryanhawaikit@gmail.com>"]
+readme = "README.md"
+package-mode=false
+
+[tool.poetry.dependencies]
+python = "^3.12"
+gradio = "^5.13.1"
+
+[tool.pyright]
+venvPath ="."
+venv = ".venv"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
