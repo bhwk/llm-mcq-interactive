@@ -1,6 +1,29 @@
 import json
+import os
 import random
+
 import gradio as gr
+
+OLLAMA_URL = os.environ.get("OLLAMA_URL")
+
+
+def llm(system_prompt: str, user_prompt: str) -> str:
+    from openai import OpenAI
+
+    client = OpenAI(
+        base_url=(OLLAMA_URL if OLLAMA_URL is not None else "http://localhost:11434")
+        + "/v1",
+        api_key="ollama",
+    )
+
+    response = client.chat.completions.create(
+        model="qwen2.5:32b",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+    )
+    return response.choices[0].message.content  # type: ignore
 
 
 def load_questions(json_path) -> list[dict[str, str]]:
@@ -23,10 +46,9 @@ class Quiz:
         return self.current_question
 
     def check_answer(self, answer):
-        assert self.current_question is not None
-        correct_option = self.current_question["cop"]
+        correct_option = self.current_question["cop"]  # type: ignore
         if answer == correct_option:
-            return True, f"Correct!\nExplanation:{self.current_question["exp"]}"
+            return True, f"Correct!\nExplanation:{self.current_question["exp"]}"  # type: ignore
         else:
             return False, "Incorrect answer!"
 
@@ -50,7 +72,7 @@ with gr.Blocks() as demo:
     def update_question():
         question = quiz.get_question()
         if question is None:
-            return "No more questions available", None, None
+            return (gr.update(value="No more questions available"), None, None, None)
         return (
             # change question display
             gr.update(value=question["question"]),
