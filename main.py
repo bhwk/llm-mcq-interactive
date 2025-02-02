@@ -9,73 +9,84 @@ def load_questions(json_path) -> list[dict[str, str]]:
     return question_list
 
 
-def random_question(question_list: list[dict[str, str]]) -> dict[str, str]:
-    return random.choice(question_list)
+class Quiz:
+    def __init__(self, questions: list[dict[str, str]]):
+        self.questions = questions
+        self.remaining_questions = questions.copy()
+        self.current_question = None
 
+    def get_question(self) -> dict[str, str] | None:
+        if len(self.remaining_questions) == 0:
+            return None
+        self.current_question = random.choice(self.remaining_questions)
+        self.remaining_questions.remove(self.current_question)
+        return self.current_question
 
-def next_question():
-    global question, correct_option, options, explanation
-    question_object = random_question(questions)
-    question = question_object["question"]
-    correct_option = question_object["cop"]
-    options = [question_object["op" + chr(op)] for op in range(ord("a"), ord("d") + 1)]
-    explanation = question_object["exp"]
-
-    return (
-        gr.Button(interactive=False),
-        gr.update(value=question),
-        gr.Radio(
-            [(options[i], i + 1) for i in range(len(options))],
-        ),
-    )
-
-
-def handle_answer(choice):
-    global correct
-    if choice == correct_option:
-        correct = True
-        return (
-            gr.Textbox(
-                f"""
-            Correct!
-            {explanation if explanation else ""}"""
-            ),
-            gr.Button(interactive=correct),
-        )
-    else:
-        return (f"You selected {choice}", gr.Button(interactive=correct))
+    def check_answer(self, answer):
+        assert self.current_question is not None
+        correct_option = self.current_question["cop"]
+        if answer == correct_option:
+            return True, f"Correct!\nExplanation:{self.current_question["exp"]}"
+        else:
+            return False, "Incorrect answer!"
 
 
 questions = load_questions("train.json")
-question_object = random_question(questions)
 
-question = question_object["question"]
-correct_option = question_object["cop"]
-options = [question_object["op" + chr(op)] for op in range(ord("a"), ord("d") + 1)]
-explanation = question_object["exp"]
-
-selected_option = ""
-
-
-correct = False
+quiz = Quiz(questions)
 
 with gr.Blocks() as demo:
     with gr.Row(equal_height=True):
-        question_display = gr.Textbox(
-            value=question,
-            scale=1,
-            interactive=False,
+        question_display = gr.Textbox(scale=1, interactive=False, label="Question")
+
+    choices = gr.Radio([], label="Choices")
+
+    with gr.Row():
+        output = gr.Textbox(interactive=False, scale=1, label="Feedback")
+        with gr.Column():
+            submit_button = gr.Button("Submit")
+            next_button = gr.Button("Next Question")
+
+    def update_question():
+        question = quiz.get_question()
+        if question is None:
+            return "No more questions available", None, None
+        return (
+            # change question display
+            gr.update(value=question["question"]),
+            # Populate choices
+            gr.update(
+                choices=[
+                    (question["opa"], 1),
+                    (question["opb"], 2),
+                    (question["opc"], 3),
+                    (question["opd"], 4),
+                ]
+            ),
+            # Clear output box
+            gr.update(value=""),
+            # Set next_button to false
+            gr.Button(interactive=False),
         )
-        next_button = gr.Button("Next Question", scale=0, interactive=correct)
 
-    radio = gr.Radio(
-        [(options[i], i + 1) for i in range(len(options))], label="Select an Option"
+    def on_answer(answer):
+        correct, feedback = quiz.check_answer(answer)
+        if correct:
+            return (
+                # set next_button to interactive
+                gr.Button(interactive=True),
+                # update output box to show answer explanation
+                gr.update(value=feedback),
+            )
+        else:
+            # set next button to false, update output box
+            return (gr.Button(), gr.update(value=feedback))
+
+    submit_button.click(on_answer, inputs=[choices], outputs=[next_button, output])
+    next_button.click(
+        update_question, outputs=[question_display, choices, output, next_button]
     )
-    output = gr.Textbox()
-    button = gr.Button("Submit")
-
-    button.click(fn=handle_answer, inputs=[radio], outputs=[output, next_button])
-    next_button.click(fn=next_question, outputs=[next_button, question_display, radio])
+    demo.load(update_question, outputs=[question_display, choices, output, next_button])
 
 
 demo.launch()
