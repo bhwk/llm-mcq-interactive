@@ -41,16 +41,21 @@ def create_agent(current_question: dict[str, str] | None) -> Agent:
             "correct_answer": correct_answer,  # type: ignore
             "explanation": explanation,  # type: ignore
         }
+        global_context='Question: <question>\nCorrect answer: <correct_answer>\nExplanation: <explanation>'
     else:
         shared_variables = {}
+        global_context=''
 
     agent = Agent(
         "Tutor",
         """Based on the answer given by the user, guide the user towards the correct answer without giving away the answer.
+        Think why the user would give this answer.
         Never give the actual answer to the user.
-        Some questions may provide an explanation of the correct answer.
-        You may use this explanation to guide the user towards answering correctly.""",
+        Some questions may provide an explanation of the correct answer. You may make use of this explanation to guide the user towards the correct answer.
+        Do not mention anything about an explanation in your answer.
+        Ensure that you do not mention the correct answer in your reply.""",
         llm=llm,
         shared_variables=shared_variables,
+        global_context=global_context
     )
     return agent

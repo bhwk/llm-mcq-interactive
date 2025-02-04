@@ -35,7 +35,7 @@ class Quiz:
 
     def check_answer(self, answer):
         global answer_map, agent
-        user_answer = self.current_question.get(answer_map["answer"])  # type: ignore
+        user_answer = self.current_question.get(answer_map[str(answer)])  # type: ignore
         correct_option = self.current_question["cop"]  # type: ignore
         if answer == correct_option:
             return True, f"Correct!\nExplanation:{self.current_question["exp"]}"  # type: ignore
