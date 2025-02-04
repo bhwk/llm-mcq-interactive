@@ -1,29 +1,17 @@
 import json
-import os
 import random
+from agentjo import Agent
+
+from agent import create_agent
 
 import gradio as gr
 
-OLLAMA_URL = os.environ.get("OLLAMA_URL")
-
-
-def llm(system_prompt: str, user_prompt: str) -> str:
-    from openai import OpenAI
-
-    client = OpenAI(
-        base_url=(OLLAMA_URL if OLLAMA_URL is not None else "http://localhost:11434")
-        + "/v1",
-        api_key="ollama",
-    )
-
-    response = client.chat.completions.create(
-        model="qwen2.5:32b",
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-    )
-    return response.choices[0].message.content  # type: ignore
+answer_map = {
+    "1": "opa",
+    "2": "opb",
+    "3": "opc",
+    "4": "opd",
+}
 
 
 def load_questions(json_path) -> list[dict[str, str]]:
@@ -46,16 +34,21 @@ class Quiz:
         return self.current_question
 
     def check_answer(self, answer):
+        global answer_map, agent
+        user_answer = self.current_question.get(answer_map["answer"])  # type: ignore
         correct_option = self.current_question["cop"]  # type: ignore
         if answer == correct_option:
             return True, f"Correct!\nExplanation:{self.current_question["exp"]}"  # type: ignore
         else:
-            return False, "Incorrect answer!"
+            feedback = agent.reply_user(query=user_answer)  # type: ignore
+            return False, feedback
 
 
 questions = load_questions("train.json")
 
+
 quiz = Quiz(questions)
+agent: Agent = create_agent(quiz.current_question)
 
 with gr.Blocks() as demo:
     with gr.Row(equal_height=True):
@@ -70,9 +63,11 @@ with gr.Blocks() as demo:
             next_button = gr.Button("Next Question")
 
     def update_question():
+        global agent
         question = quiz.get_question()
         if question is None:
             return (gr.update(value="No more questions available"), None, None, None)
+        agent = create_agent(question)
         return (
             # change question display
             gr.update(value=question["question"]),
@@ -101,7 +96,7 @@ with gr.Blocks() as demo:
                 gr.update(value=feedback),
             )
         else:
-            # set next button to false, update output box
+            # update output box
             return (gr.Button(), gr.update(value=feedback))
 
     submit_button.click(on_answer, inputs=[choices], outputs=[next_button, output])
