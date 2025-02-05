@@ -15,8 +15,8 @@ cx = "7663739d3eb3f4bd5"
 TRUNCATE_SCRAPED_TEXT = 10000
 
 
-def search_web(search_query):
-    """Useful for running web searches"""
+def search_web(search_query: str):
+    """Searches the web for information related to search_query"""
     response = strict_json(
         "Provide a google search term based on the search query provided",
         search_query,
