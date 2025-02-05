@@ -18,5 +18,6 @@ def llm(system_prompt: str, user_prompt: str) -> str:
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
+        max_tokens=16000,
     )
     return response.choices[0].message.content  # type: ignore
