@@ -7,7 +7,7 @@ from selenium.webdriver.firefox.options import Options
 
 from agentjo import strict_json
 
-from agent import llm
+from llm import llm
 
 api_key = ""
 cx = "7663739d3eb3f4bd5"
