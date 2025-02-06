@@ -1,5 +1,5 @@
 from rag import search_web
-from agentjo import Agent
+from agentjo import Agent, ConversationWrapper
 from llm import llm
 
 answer_map = {
@@ -22,11 +22,14 @@ def create_agent(
             "question": question,  # type: ignore
             "correct_answer": correct_answer,  # type: ignore
             "explanation": explanation,  # type: ignore
+            "information": [],
         }
-        global_context = "Question: <question>\nCorrect answer: <correct_answer>\nExplanation: <explanation>"
+        global_context = "Question: <question>\nCorrect answer: <correct_answer>\nExplanation: <explanation>\nInformation Searched: <information>"
     else:
-        shared_variables = {}
-        global_context = ""
+        shared_variables = {
+            "information": [],
+        }
+        global_context = "Information Searched: <information>"
 
     agent = Agent(
         "Tutor",
@@ -34,11 +37,16 @@ def create_agent(
         Think why the user would give this answer.
         Never give the actual answer to the user.
         Some questions may provide an explanation of the correct answer. You may make use of this explanation to guide the user towards the correct answer.
+        Do not mention the context in your answer.
+        Do not let the user know that you have access to extra context.
+        Your answer should not contain any mentions of a "context".
         Do not mention anything about an explanation in your answer.
-        You may want to search for information about either the answer or question that could help you explain better to the user.
+        Search for additional information related to either the user's answer of the question to help guide them better.
         Ensure that you do not mention the correct answer in your reply.""",
         llm=llm,
         shared_variables=shared_variables,
         global_context=global_context,
+        verbose=True,
+        debug=True,
     ).assign_functions(functions)
-    return agent
+    return ConversationWrapper(agent)

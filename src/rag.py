@@ -13,8 +13,9 @@ CSE_ID = os.environ.get("CSE_ID")
 TRUNCATE_SCRAPED_TEXT = 10000
 
 
-def search_web(search_query: str):
+def search_web(shared_variables, search_query: str):
     """Searches the web for information related to search_query"""
+    information_searched = shared_variables["information"]
     response = strict_json(
         "Provide a google search term based on the search query provided",
         search_query,
@@ -37,7 +38,8 @@ def search_web(search_query: str):
 
     summary = response["Summary"]  # type: ignore
 
-    return summary
+    information_searched.append(summary)
+    shared_variables["information"] = information_searched
 
 
 def search(search_item, SEARCH_API_KEY, cse_id, search_depth=10, site_filter=None):

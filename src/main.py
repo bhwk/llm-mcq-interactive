@@ -43,7 +43,7 @@ class Quiz:
         if answer == correct_option:
             return True, f"Correct!\nExplanation:{self.current_question["exp"]}"  # type: ignore
         else:
-            feedback = agent.reply_user(query=user_answer)  # type: ignore
+            feedback = agent.reply_user(query=user_answer, verbose=True)  # type: ignore
             return False, feedback
 
 
@@ -109,4 +109,4 @@ with gr.Blocks() as demo:
     demo.load(update_question, outputs=[question_display, choices, output, next_button])
 
 
-demo.launch()
+demo.launch(quiet=False, show_error=True)
