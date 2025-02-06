@@ -4,7 +4,6 @@ import random
 from agentjo import Agent
 
 from agent import create_agent
-from rag import search_web
 
 import gradio as gr
 
@@ -48,7 +47,7 @@ class Quiz:
             return False, feedback
 
 
-questions = load_questions("train.json")
+questions = load_questions("questions.json")
 
 
 quiz = Quiz(questions)
