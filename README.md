@@ -27,3 +27,38 @@ An example .env file has been included in the repo.
 # Questions
 
 A questions.json is included in the repo. It consists of questions from the training set of [MedMCQA](https://medmcqa.github.io/).
+
+# Model context window
+
+Given that we're making use of the OpenAI completion API with ollama, it's not possible to set the context window the for the LLM programmatically. 
+
+To increase the context window for the model, create a Modelfile with the desired LLM as a base. For example, if I wanted to run qwen2.5 with a context window of 32K tokens:
+```
+FROM qwen2.5:32b
+PARAMETER num_ctx 32000
+```
+
+Next create the model using the following command:
+```
+ollama create <MODEL_NAME> -f Modelfile
+```
+
+Replace MODEL_NAME with your desired name. Once this is done, you will have to replace the model name in ```llm.py```, under the ```src``` folder.
+
+Relevant snippet:
+```python
+    client = OpenAI(
+        base_url=(OLLAMA_URL if OLLAMA_URL is not None else "http://localhost:11434")
+        + "/v1",
+        api_key="ollama",
+    )
+
+    response = client.chat.completions.create(
+        model="qwen2.5:32k_ctx",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt},
+        ],
+    )
+
+```

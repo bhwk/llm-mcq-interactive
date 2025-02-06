@@ -32,6 +32,7 @@ def search_web(search_query: str):
         Make sure to cite all the sources at the end of your answer.""",
         json.dumps(results),
         output_format={"Summary": "Summary response"},
+        llm=llm
     )
 
     summary = response["Summary"]  # type: ignore
