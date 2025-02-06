@@ -13,6 +13,7 @@ agentjo = "^0.0.5"
 ollama = "^0.4.7"
 selenium = "^4.28.1"
 bs4 = "^0.0.2"
+python-dotenv = "^1.0.1"
 
 [tool.pyright]
 venvPath ="."

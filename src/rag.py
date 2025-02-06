@@ -1,16 +1,14 @@
+import os
 import requests
 import json
-from urllib.parse import urlparse
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.firefox.options import Options
 
 from agentjo import strict_json
 
 from llm import llm
 
-api_key = ""
-cx = "7663739d3eb3f4bd5"
+SEARCH_API_KEY = os.environ.get("SEARCH_API_KEY")
+CSE_ID = os.environ.get("CSE_ID")
 
 TRUNCATE_SCRAPED_TEXT = 10000
 
@@ -24,7 +22,9 @@ def search_web(search_query: str):
         llm=llm,
     )
     search_term = response["Search_term"]  # type: ignore
-    search_items = search(search_item=search_term, api_key=api_key, cse_id=cx)
+    search_items = search(
+        search_item=search_term, SEARCH_API_KEY=SEARCH_API_KEY, cse_id=CSE_ID
+    )
     results = get_search_results(search_items, search_term)
 
     response = strict_json(
@@ -40,12 +40,12 @@ def search_web(search_query: str):
     return summary
 
 
-def search(search_item, api_key, cse_id, search_depth=10, site_filter=None):
+def search(search_item, SEARCH_API_KEY, cse_id, search_depth=10, site_filter=None):
     service_url = "https://www.googleapis.com/customsearch/v1"
 
     params = {
         "q": search_item,
-        "key": api_key,
+        "key": SEARCH_API_KEY,
         "cx": cse_id,
         "num": search_depth,
     }

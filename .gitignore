@@ -2,3 +2,4 @@ dev.json
 train.json
 test.json
 *.zip
+.env

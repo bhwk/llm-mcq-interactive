@@ -1,3 +1,4 @@
+import dotenv
 import json
 import random
 from agentjo import Agent
@@ -13,6 +14,8 @@ answer_map = {
     "3": "opc",
     "4": "opd",
 }
+
+dotenv.load_dotenv()  # loads environment variables from .env file
 
 
 def load_questions(json_path) -> list[dict[str, str]]:
