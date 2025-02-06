@@ -43,7 +43,8 @@ class Quiz:
         if answer == correct_option:
             return True, f"Correct!\nExplanation:{self.current_question["exp"]}"  # type: ignore
         else:
-            feedback = agent.reply_user(query=user_answer, verbose=True)  # type: ignore
+            feedback = agent.run(task=user_answer)  # type: ignore
+            feedback = agent.reply_user()
             return False, feedback
 
 

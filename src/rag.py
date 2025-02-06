@@ -10,14 +10,12 @@ from llm import llm
 SEARCH_API_KEY = os.environ.get("SEARCH_API_KEY")
 CSE_ID = os.environ.get("CSE_ID")
 
-TRUNCATE_SCRAPED_TEXT = 10000
+TRUNCATE_SCRAPED_TEXT = 5000  # Adjust based on your model's context window
 
-
-def search_web(shared_variables, search_query: str):
+def search_web(search_query: str):
     """Searches the web for information related to search_query"""
-    information_searched = shared_variables["information"]
     response = strict_json(
-        "Provide a google search term based on the search query provided",
+        "Provide a google search term based on the search query provided. Correct any spelling mistakes.",
         search_query,
         output_format={"Search_term": "The generated search term"},
         llm=llm,
@@ -37,12 +35,10 @@ def search_web(shared_variables, search_query: str):
     )
 
     summary = response["Summary"]  # type: ignore
-
-    information_searched.append(summary)
-    shared_variables["information"] = information_searched
+    return summary
 
 
-def search(search_item, SEARCH_API_KEY, cse_id, search_depth=10, site_filter=None):
+def search(search_item, SEARCH_API_KEY, cse_id, search_depth=5, site_filter=None):
     service_url = "https://www.googleapis.com/customsearch/v1"
 
     params = {
@@ -83,9 +79,6 @@ def search(search_item, SEARCH_API_KEY, cse_id, search_depth=10, site_filter=Non
         print(f"An error occurred during the search: {e}")
         return []
 
-
-TRUNCATE_SCRAPED_TEXT = 10000  # Adjust based on your model's context window
-SEARCH_DEPTH = 5
 
 
 def retrieve_content(url, max_tokens=TRUNCATE_SCRAPED_TEXT):

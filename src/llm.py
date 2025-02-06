@@ -13,11 +13,10 @@ def llm(system_prompt: str, user_prompt: str) -> str:
     )
 
     response = client.chat.completions.create(
-        model="qwen2.5:32b",
+        model="qwen2.5:32k_ctx",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt},
         ],
-        max_tokens=16000,
     )
     return response.choices[0].message.content  # type: ignore
