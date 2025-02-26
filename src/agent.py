@@ -51,4 +51,6 @@ def create_agent(
         verbose=True,
         debug=True,
     ).assign_functions(functions)
-    return ConversationWrapper(agent)
+    return ConversationWrapper(
+        agent, persistent_memory={"User Provided Correct Answer": "type:bool"}
+    )
