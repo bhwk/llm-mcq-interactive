@@ -16,9 +16,8 @@ def create_agent(
     global answer_map
     if current_question is not None:
         question = current_question["question"]
-        correct_answer = current_question.get(
-            str(answer_map.get(current_question["cop"]))
-        )  # type: ignore
+        correct_option = answer_map.get(str(current_question["cop"]))
+        correct_answer = current_question.get(str(correct_option))  # type: ignore
         explanation = current_question["exp"]
         shared_variables = {
             "question": question,  # type: ignore
@@ -49,6 +48,9 @@ def create_agent(
         shared_variables=shared_variables,
         global_context=global_context,
         verbose=True,
-        debug=True,
     ).assign_functions(functions)
-    return ConversationWrapper(agent)
+
+    convo_agent = ConversationWrapper(
+        agent, persistent_memory={"User Provided Correct Answer": "type:bool"}
+    )
+    return convo_agent
