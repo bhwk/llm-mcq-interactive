@@ -3,3 +3,4 @@ train.json
 test.json
 *.zip
 .env
+*__pycache__

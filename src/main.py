@@ -38,39 +38,64 @@ class Quiz:
 
     def check_answer(self, answer):
         global answer_map, agent
-        user_answer = self.current_question.get(answer_map[str(answer)])  # type: ignore
         correct_option = self.current_question["cop"]  # type: ignore
+        user_answer = f"User's mcq choice: {self.current_question.get(answer_map[str(answer[0])])}\n{("User's explanation for answer: " + answer[1]) if answer[1] else ""}"  # type: ignore
+        feedback = agent.run(task=user_answer)
         if answer == correct_option:
-            return True, f"Correct!\nExplanation:{self.current_question["exp"]}"  # type: ignore
+            feedback = agent.reply_user(stateful=True)
+            return True, feedback
         else:
-            feedback = agent.run(task=user_answer)  # type: ignore
-            feedback = agent.reply_user()
+            feedback = agent.reply_user(stateful=True)
             return False, feedback
 
 
-questions = load_questions("questions.json")
+css = """
+        .radio-group .wrap {
+            display: grid !important;
+            grid-template-columns: 1fr 1fr;
+        }
+        """
+with gr.Blocks(css=css) as demo:
+    questions = load_questions("questions.json")
 
+    quiz = Quiz(questions)
+    agent: Agent = create_agent(quiz.current_question)
+    active_tab = gr.State("MCQ")
 
-quiz = Quiz(questions)
-agent: Agent = create_agent(quiz.current_question)
+    with gr.Column():
+        with gr.Tab("MCQ"):
+            with gr.Row(equal_height=True):
+                question_display = gr.Textbox(
+                    scale=1, interactive=False, label="Question"
+                )
 
-with gr.Blocks() as demo:
-    with gr.Row(equal_height=True):
-        question_display = gr.Textbox(scale=1, interactive=False, label="Question")
+            with gr.Row(equal_height=True):
+                choices = gr.Radio(
+                    [], label="Choices", scale=1, elem_classes="radio-group"
+                )
 
-    choices = gr.Radio([], label="Choices")
+        with gr.Tab("Open-ended"):
+            with gr.Row(equal_height=True):
+                open_question = gr.Textbox(scale=1, interactive=False, label="Question")
 
-    with gr.Row():
-        output = gr.Textbox(interactive=False, scale=1, label="Feedback")
-        with gr.Column():
-            submit_button = gr.Button("Submit")
-            next_button = gr.Button("Next Question")
+        with gr.Row():
+            output = gr.Textbox(interactive=False, scale=1, label="Feedback")
+            user_text = gr.Textbox(scale=1, label="User's text explanation")
+            with gr.Column():
+                submit_button = gr.Button("Submit")
+                next_button = gr.Button("Next Question")
 
     def update_question():
         global agent
         question = quiz.get_question()
         if question is None:
-            return (gr.update(value="No more questions available"), None, None, None)
+            return (
+                gr.update(value="No more questions available"),
+                None,
+                None,
+                None,
+                gr.update(value=""),
+            )
         agent = create_agent(question)
         return (
             # change question display
@@ -88,9 +113,14 @@ with gr.Blocks() as demo:
             gr.update(value=""),
             # Set next_button to false
             gr.Button(interactive=False),
+            # clear user input box
+            gr.update(value=""),
         )
 
-    def on_answer(answer):
+    def on_answer(choice, user_answer):
+        answer = []
+        answer.append(choice)
+        answer.append(user_answer)
         correct, feedback = quiz.check_answer(answer)
         if correct:
             return (
@@ -103,11 +133,17 @@ with gr.Blocks() as demo:
             # update output box
             return (gr.Button(), gr.update(value=feedback))
 
-    submit_button.click(on_answer, inputs=[choices], outputs=[next_button, output])
-    next_button.click(
-        update_question, outputs=[question_display, choices, output, next_button]
+    submit_button.click(
+        on_answer, inputs=[choices, user_text], outputs=[next_button, output]
     )
-    demo.load(update_question, outputs=[question_display, choices, output, next_button])
+    next_button.click(
+        update_question,
+        outputs=[question_display, choices, output, next_button, user_text],
+    )
+    demo.load(
+        update_question,
+        outputs=[question_display, choices, output, next_button, user_text],
+    )
 
 
 demo.launch(quiet=False, show_error=True)
