@@ -56,6 +56,9 @@ css = """
         }
         """
 with gr.Blocks(css=css) as demo:
+    # TODO: Figure out how to handle different types of questions
+    # - maybe we can change the question instantiated with the agent
+    # depending on the Tabbed state
     questions = load_questions("questions.json")
 
     quiz = Quiz(questions)
