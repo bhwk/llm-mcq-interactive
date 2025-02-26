@@ -16,7 +16,7 @@ def create_agent(
     global answer_map
     if current_question is not None:
         question = current_question["question"]
-        correct_option = current_question["cop"]
+        correct_option = answer_map.get(str(current_question["cop"]))
         correct_answer = current_question.get(str(correct_option))  # type: ignore
         explanation = current_question["exp"]
         shared_variables = {
