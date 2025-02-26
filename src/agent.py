@@ -50,6 +50,8 @@ def create_agent(
         global_context=global_context,
         verbose=True,
     ).assign_functions(functions)
-    return ConversationWrapper(
+
+    convo_agent = ConversationWrapper(
         agent, persistent_memory={"User Provided Correct Answer": "type:bool"}
     )
+    return convo_agent

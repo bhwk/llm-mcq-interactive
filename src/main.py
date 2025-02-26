@@ -41,13 +41,11 @@ class Quiz:
         correct_option = self.current_question["cop"]  # type: ignore
         # user_answer = f"User's mcq choice: {self.current_question.get(answer_map[str(answer[0])])}\n{("User's explanation for answer: " + answer[1]) if answer[1] else ""}"  # type: ignore
         user_answer = f"User's answer: {answer[0]}\n{("User's Explanation: "+answer[1]) if answer[1] else ""}"
-        feedback = agent.run(task=user_answer)
+        feedback = agent.chat(user_answer)  # type: ignore
         # if answer == correct_option:
         if agent.shared_variables["Persistent Memory"]["User Provided Correct Answer"]:
-            feedback = agent.reply_user(stateful=True)
             return True, feedback
         else:
-            feedback = agent.reply_user(stateful=True)
             return False, feedback
 
 
@@ -105,10 +103,10 @@ with gr.Blocks(css=css) as demo:
             # Populate choices
             gr.update(
                 choices=[
-                    (question["opa"], 1),
-                    (question["opb"], 2),
-                    (question["opc"], 3),
-                    (question["opd"], 4),
+                    (question["opa"]),
+                    (question["opb"]),
+                    (question["opc"]),
+                    (question["opd"]),
                 ]
             ),
             # Clear output box
