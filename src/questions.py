@@ -7,7 +7,7 @@ from llm import llm
 def questions_from_pdf(file: str):
     extracted_text = extract_pdf_text(file)
     res = strict_json(
-        system_prompt="You are a multiple choice question generator that generates questions from a user's text.",
+        system_prompt="Generate 5 multiple choice questions from the extracted text.",
         user_prompt=extracted_text,
         output_format={
             "Questions": [
