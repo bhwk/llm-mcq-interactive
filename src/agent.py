@@ -15,10 +15,9 @@ def create_agent(
 ) -> Agent:
     global answer_map
     if current_question is not None:
-        question = current_question["question"]
-        correct_option = answer_map.get(str(current_question["cop"]))
-        correct_answer = current_question.get(str(correct_option))  # type: ignore
-        explanation = current_question["exp"]
+        question = current_question["Question"]
+        correct_answer = current_question["Correct Answer"]
+        explanation = current_question["Explanation"]
         shared_variables = {
             "question": question,  # type: ignore
             "correct_answer": correct_answer,  # type: ignore
@@ -42,7 +41,7 @@ def create_agent(
         Do not let the user know that you have access to extra context.
         Your answer should not contain any mentions of a "context".
         Do not mention anything about an explanation in your answer.
-        Search for additional information related to either the user's answer of the question to help guide them better.
+        If needed, search for additional information related to either the user's answer of the question to help guide them better.
         Ensure that you do not mention the correct answer in your reply.""",
         llm=llm,
         shared_variables=shared_variables,

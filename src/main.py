@@ -1,52 +1,10 @@
 import dotenv
-import json
-import random
-from agentjo import Agent
-
-from agent import create_agent
+from questions import questions_from_pdf
+from quiz import Quiz
 
 import gradio as gr
 
-answer_map = {
-    "1": "opa",
-    "2": "opb",
-    "3": "opc",
-    "4": "opd",
-}
-
 dotenv.load_dotenv()  # loads environment variables from .env file
-
-
-def load_questions(json_path) -> list[dict[str, str]]:
-    with open(json_path) as f:
-        question_list = [json.loads(line.strip()) for line in f]
-    return question_list
-
-
-class Quiz:
-    def __init__(self, questions: list[dict[str, str]]):
-        self.questions = questions
-        self.remaining_questions = questions.copy()
-        self.current_question = None
-
-    def get_question(self) -> dict[str, str] | None:
-        if len(self.remaining_questions) == 0:
-            return None
-        self.current_question = random.choice(self.remaining_questions)
-        self.remaining_questions.remove(self.current_question)
-        return self.current_question
-
-    def check_answer(self, answer):
-        global answer_map, agent
-        correct_option = self.current_question["cop"]  # type: ignore
-        # user_answer = f"User's mcq choice: {self.current_question.get(answer_map[str(answer[0])])}\n{("User's explanation for answer: " + answer[1]) if answer[1] else ""}"  # type: ignore
-        user_answer = f"User's answer: {answer[0]}\n{("User's Explanation: "+answer[1]) if answer[1] else ""}"
-        feedback = agent.chat(user_answer)  # type: ignore
-        # if answer == correct_option:
-        if agent.shared_variables["Persistent Memory"]["User Provided Correct Answer"]:
-            return True, feedback
-        else:
-            return False, feedback
 
 
 css = """
@@ -56,10 +14,9 @@ css = """
         }
         """
 with gr.Blocks(css=css) as demo:
-    questions = load_questions("questions.json")
+    questions: list[dict] = questions_from_pdf("test.pdf")["Questions"]  # type: ignore
 
     quiz = Quiz(questions)
-    agent: Agent = create_agent(quiz.current_question)
     active_tab = gr.State("MCQ")
 
     with gr.Column():
@@ -86,7 +43,6 @@ with gr.Blocks(css=css) as demo:
                 next_button = gr.Button("Next Question")
 
     def update_question():
-        global agent
         question = quiz.get_question()
         if question is None:
             return (
@@ -96,19 +52,12 @@ with gr.Blocks(css=css) as demo:
                 None,
                 gr.update(value=""),
             )
-        agent = create_agent(question)
+        quiz.update_agent()
         return (
             # change question display
             gr.update(value=question["question"]),
             # Populate choices
-            gr.update(
-                choices=[
-                    (question["opa"]),
-                    (question["opb"]),
-                    (question["opc"]),
-                    (question["opd"]),
-                ]
-            ),
+            gr.update(choices=[option for option in question["Options"]]),
             # Clear output box
             gr.update(value=""),
             # Set next_button to false
