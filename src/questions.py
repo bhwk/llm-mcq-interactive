@@ -10,14 +10,7 @@ def questions_from_pdf(file: str):
         system_prompt="Generate 5 multiple choice questions from the extracted text.",
         user_prompt=extracted_text,
         output_format={
-            "Questions": [
-                {
-                    "Question": "The question to ask",
-                    "Options": "A list of 4 possible answers to this question with only 1 correct answer, type: List[str]",
-                    "Correct Answer": "The correct answer from the 4 possible answers, type: str",
-                    "Explanation": "The explanation for why the answer is correct",
-                }
-            ]
+            "Questions": "The list of questions, type: List[Dict['Question', 'Options', 'Correct Answer', 'Explanation']]",
         },
         llm=llm,
     )
