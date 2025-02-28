@@ -1,19 +1,11 @@
 from rag import search_web
 from agentjo import Agent, ConversationWrapper
-from llm import llm
-
-answer_map = {
-    "1": "opa",
-    "2": "opb",
-    "3": "opc",
-    "4": "opd",
-}
+from llm import llm, llm_async
 
 
 def create_agent(
     current_question: dict[str, str] | None, functions: list = [search_web]
 ) -> Agent:
-    global answer_map
     if current_question is not None:
         question = current_question["Question"]
         correct_answer = current_question["Correct Answer"]
