@@ -55,7 +55,7 @@ with gr.Blocks(css=css) as demo:
         quiz.update_agent()
         return (
             # change question display
-            gr.update(value=question["question"]),
+            gr.update(value=question["Question"]),
             # Populate choices
             gr.update(choices=[option for option in question["Options"]]),
             # Clear output box
