@@ -1,4 +1,5 @@
 import os
+import requests
 import json
 import aiohttp
 import asyncio
@@ -13,31 +14,32 @@ CSE_ID = os.environ.get("CSE_ID")
 TRUNCATE_SCRAPED_TEXT = 5000  # Adjust based on your model's context window
 
 
-async def search_web(search_query: str):
+def search_web(search_query: str):
     """Searches the web for information related to search_query"""
-    response = await strict_json_async(
+    response = strict_json(
         "Provide a google search term based on the search query provided. Correct any spelling mistakes.",
         search_query,
         output_format={"Search_term": "The generated search term"},
-        llm=llm_async,
+        llm=llm,
     )
     search_term = response["Search_term"]  # type: ignore
-    search_items = await search(search_term, SEARCH_API_KEY, CSE_ID)
-    results = await get_search_results(search_items, search_term)
+    search_items = search(search_term, SEARCH_API_KEY, CSE_ID)
+    results = asyncio.run(get_search_results(search_items, search_term))
 
-    response = await strict_json_async(
+    response = strict_json(
         f"""You will be provided with a dictionary of search results in JSON format for search query {search_term}.
         Based on the search results provided, provide a detailed response to this query: **'{search_query}'**.
         Make sure to cite all the sources at the end of your answer.""",
         json.dumps(results),
         output_format={"Summary": "Summary response"},
-        llm=llm_async,
+        llm=llm,
     )
 
-    return response["Summary"]  # type: ignore
+    summary = response["Summary"]  # type: ignore
+    return summary
 
 
-async def search(search_item, SEARCH_API_KEY, cse_id, search_depth=5, site_filter=None):
+def search(search_item, SEARCH_API_KEY, cse_id, search_depth=3, site_filter=None):
     service_url = "https://www.googleapis.com/customsearch/v1"
     params = {
         "q": search_item,
@@ -46,18 +48,18 @@ async def search(search_item, SEARCH_API_KEY, cse_id, search_depth=5, site_filte
         "num": search_depth,
     }
 
-    async with aiohttp.ClientSession() as session:
-        try:
-            async with session.get(service_url, params=params) as response:
-                results = await response.json()
-                if "items" in results:
-                    return (
-                        [r for r in results["items"] if site_filter in r["link"]]
-                        if site_filter
-                        else results["items"]
-                    )
-        except Exception as e:
-            print(f"Error during search: {e}")
+    try:
+        response = requests.get(service_url, params=params)
+        response.raise_for_status()
+        results = response.json()
+
+        if "items" in results:
+            if site_filter:
+                return [r for r in results["items"] if site_filter in r["link"]]
+            return results["items"]
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error during search: {e}")
     return []
 
 
@@ -84,7 +86,7 @@ async def summarize_content(content, search_term, character_limit=500):
             prompt,
             content,
             output_format={"Summary": "Concise summary"},
-            llm=llm,
+            llm=llm_async,
         )
         return response["Summary"]  # type: ignore
     except Exception as e:
@@ -95,27 +97,34 @@ async def summarize_content(content, search_term, character_limit=500):
 async def get_search_results(search_items, search_term, character_limit=500):
     results_list = []
     async with aiohttp.ClientSession() as session:
-        web_contents = await asyncio.gather(
-            *[retrieve_content(session, item.get("link")) for item in search_items],
-            return_exceptions=True,
-        )
-        summaries = await asyncio.gather(
-            *[
-                summarize_content(content, search_term, character_limit)
-                for content in web_contents
-                if content
-            ],
-            return_exceptions=True,
-        )
+        tasks = [retrieve_content(session, item.get("link")) for item in search_items]
+        web_contents = await asyncio.gather(*tasks, return_exceptions=True)
+
+        summary_tasks = []
+        for idx, (item, web_content) in enumerate(
+            zip(search_items, web_contents), start=1
+        ):
+            url = item.get("link")
+            snippet = item.get("snippet", "")
+            if isinstance(web_content, Exception) or web_content is None:
+                print(f"Skipped URL due to retrieval failure: {url}")
+                continue
+            summary_tasks.append(
+                summarize_content(web_content, search_term, character_limit)
+            )
+
+        summaries = await asyncio.gather(*summary_tasks, return_exceptions=True)
 
         for idx, (item, summary) in enumerate(zip(search_items, summaries), start=1):
+            url = item.get("link")
+            snippet = item.get("snippet", "")
             if isinstance(summary, Exception) or summary is None:
                 continue
             results_list.append(
                 {
                     "order": idx,
-                    "link": item.get("link"),
-                    "title": item.get("snippet", ""),
+                    "link": url,
+                    "title": snippet,
                     "Summary": summary,
                 }
             )
