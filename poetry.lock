@@ -1417,6 +1417,25 @@ files = [
 windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
+name = "pypdf"
+version = "5.3.0"
+description = "A pure-python PDF library capable of splitting, merging, cropping, and transforming PDF files"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "pypdf-5.3.0-py3-none-any.whl", hash = "sha256:d7b6db242f5f8fdb4990ae11815c394b8e1b955feda0befcce862efd8559c181"},
+    {file = "pypdf-5.3.0.tar.gz", hash = "sha256:08393660dfea25b27ec6fe863fb2f2248e6270da5103fae49e9dea8178741951"},
+]
+
+[package.extras]
+crypto = ["cryptography"]
+cryptodome = ["PyCryptodome"]
+dev = ["black", "flit", "pip-tools", "pre-commit (<2.18.0)", "pytest-cov", "pytest-socket", "pytest-timeout", "pytest-xdist", "wheel"]
+docs = ["myst_parser", "sphinx", "sphinx_rtd_theme"]
+full = ["Pillow (>=8.0.0)", "cryptography"]
+image = ["Pillow (>=8.0.0)"]
+
+[[package]]
 name = "pysocks"
 version = "1.7.1"
 description = "A Python SOCKS client module. See https://github.com/Anorov/PySocks for more information."
@@ -1997,4 +2016,4 @@ h11 = ">=0.9.0,<1"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "c13a429d096fc376d9929acbbdf71583327c5057dcd7adbac2cfeaec2049e941"
+content-hash = "45c7ae57dd5923a8d826024409bf1440ded3dffe70af08e3d9deae26c8a8aa31"
