@@ -1,5 +1,6 @@
 import dotenv
-from questions import questions_from_pdf
+from questions import questions_from_pdf, async_questions_from_pdf
+import asyncio
 from quiz import AsyncQuiz, Quiz
 
 import gradio as gr
@@ -14,7 +15,9 @@ css = """
         }
         """
 with gr.Blocks(css=css) as demo:
-    questions: list[dict] = await questions_from_pdf("test.pdf")["Questions"]  # type: ignore
+    questions: list[dict] = asyncio.run(async_questions_from_pdf("test.pdf"))[
+        "Questions"
+    ]  # type: ignore
 
     quiz = AsyncQuiz(questions)
     active_tab = gr.State("MCQ")

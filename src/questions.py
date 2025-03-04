@@ -20,7 +20,7 @@ def questions_from_pdf(file: str):
 
 async def async_questions_from_pdf(file: str):
     extracted_text = extract_pdf_text(file)
-    res = strict_json_async(
+    res = await strict_json_async(
         system_prompt="Generate 5 multiple choice questions from the extracted text.",
         user_prompt=extracted_text,
         output_format={
