@@ -3,6 +3,8 @@ from agentjo import Agent, AsyncAgent, ConversationWrapper
 from llm import llm, llm_async
 
 
+# TODO: Convert this to not rely on ConversationWrapper
+#       will have to handle my own persistent memory
 async def create_async_agent(current_question: dict[str, str] | None) -> Agent:
     if current_question is not None:
         question = current_question["Question"]
