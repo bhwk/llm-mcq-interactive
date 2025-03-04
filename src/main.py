@@ -1,6 +1,6 @@
 import dotenv
 from questions import questions_from_pdf
-from quiz import Quiz
+from quiz import AsyncQuiz, Quiz
 
 import gradio as gr
 
@@ -14,9 +14,9 @@ css = """
         }
         """
 with gr.Blocks(css=css) as demo:
-    questions: list[dict] = questions_from_pdf("test.pdf")["Questions"]  # type: ignore
+    questions: list[dict] = await questions_from_pdf("test.pdf")["Questions"]  # type: ignore
 
-    quiz = Quiz(questions)
+    quiz = AsyncQuiz(questions)
     active_tab = gr.State("MCQ")
 
     with gr.Column():
@@ -42,7 +42,7 @@ with gr.Blocks(css=css) as demo:
                 submit_button = gr.Button("Submit")
                 next_button = gr.Button("Next Question")
 
-    def update_question():
+    async def update_question():
         question = quiz.get_question()
         if question is None:
             return (
@@ -52,7 +52,7 @@ with gr.Blocks(css=css) as demo:
                 None,
                 gr.update(value=""),
             )
-        quiz.update_agent()
+        await quiz.update_agent()
         return (
             # change question display
             gr.update(value=question["Question"]),
@@ -94,5 +94,5 @@ with gr.Blocks(css=css) as demo:
         outputs=[question_display, choices, output, next_button, user_text],
     )
 
-
+demo.queue()
 demo.launch(quiet=False, show_error=True)
