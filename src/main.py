@@ -19,7 +19,7 @@ with gr.Blocks(css=css) as demo:
         "Questions"
     ]  # type: ignore
 
-    quiz = AsyncQuiz(questions)
+    quiz = asyncio.run(AsyncQuiz.create(questions))
     active_tab = gr.State("MCQ")
 
     with gr.Column():
